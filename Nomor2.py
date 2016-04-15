@@ -11,8 +11,8 @@ def parseLine(line):
 
 lines = sc.textFile("file:///SparkCourse/salaries.csv")
 parsedLines = lines.map(parseLine)
-
-averageOvertimePay = parsedLines.mapValues(lambda x: (x, 1)).reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1])).mapValues(lambda x: x[0] / x[1])
+filterdata = parsedLines.filter('something yang ane masih belum paham')
+averageOvertimePay = filterdata.mapValues(lambda x: (x, 1)).reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1])).mapValues(lambda x: x[0] / x[1])
 
 flippedresult = averageOvertimePay.map(lambda (x,y) : (y,x))
 averageOvertimePaySorted = flippedresult.sortByKey()
