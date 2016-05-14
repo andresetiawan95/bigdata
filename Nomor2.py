@@ -9,9 +9,9 @@ def parseLine(line):
     overtimePay = fields[4]
     return (jobType, overtimePay)
 
-lines = sc.textFile("file:///SparkCourse/salaries.csv")
+lines = sc.textFile("file:///bigdata/salaries.csv")
 parsedLines = lines.map(parseLine)
-filterdata = parsedLines.filter('something yang ane masih belum paham')
+filterdata = parsedLines.filter(lambda x : x[1] is not "Not Provided")
 averageOvertimePay = filterdata.mapValues(lambda x: (x, 1)).reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1])).mapValues(lambda x: x[0] / x[1])
 
 flippedresult = averageOvertimePay.map(lambda (x,y) : (y,x))
