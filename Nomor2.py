@@ -1,23 +1,31 @@
+from math import sqrt
+from numpy import array
+import sys
+import re
 from pyspark import SparkConf, SparkContext
-
 conf = SparkConf().setMaster("local").setAppName("LemburJob")
 sc = SparkContext(conf = conf)
 
 def parseLine(line):
-    fields = line.split(',')
+    fields = re.split(r'\t+', line)
     jobType = fields[2]
-    overtimePay = fields[4]
-    return (jobType, overtimePay)
+    basePay = float(fields[3])
+    if basePay==0:
+        basePay=-1
+    overtimePay = float(fields[4])
+    payrate = float(overtimePay/basePay)
+    return (jobType, payrate)
 
-lines = sc.textFile("file:///bigdata/salaries.csv")
-parsedLines = lines.map(parseLine)
-filterdata = parsedLines.filter(lambda x : x[1] is not "Not Provided")
-averageOvertimePay = filterdata.mapValues(lambda x: (x, 1)).reduceByKey(lambda x, y: (x[0] + y[0], x[1] + y[1])).mapValues(lambda x: x[0] / x[1])
+lines = sc.textFile("file:///SparkCourse/salaries.txt")
+filterdata = lines.filter(lambda x :"Not Provided" not in x)
+parsedLines = filterdata.map(parseLine)
 
-flippedresult = averageOvertimePay.map(lambda (x,y) : (y,x))
-averageOvertimePaySorted = flippedresult.sortByKey()
+averageOvertimePay = parsedLines.mapValues(lambda x: (x, 1)).reduceByKey(lambda x, y: (x[0]+y[0], x[1]+y[1]))
+totalOvertimePay=averageOvertimePay.mapValues(lambda x: x[0] / x[1])
 
-results = averageOvertimePaySorted.collect();
+flippedresult = totalOvertimePay.map(lambda (x,y) : (y,x)).sortByKey()
 
-for result in results :
-    print result
+results = flippedresult.collect()
+maxlembur = max(results)[1]
+
+print str(maxlembur)
